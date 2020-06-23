@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kanouakira.vueblog.mapper.PostMapper">
+    <resultMap id="postMap" type="com.kanouakira.vueblog.entity.Post">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="summary" property="summary"/>
+        <result column="body" property="body"/>
+        <result column="created" property="created"/>
+        <result column="views" property="views"/>
+        <result column="authorId" property="author_id"/>
+        <association property="user" javaType="com.kanouakira.vueblog.entity.User">
+            <id column="authorId" property="id"/>
+            <result column="username" property="username"/>
+            <result column="name" property="name"/>
+            <result column="avatar" property="avatar"/>
+            <result column="email" property="email"/>
+            <result column="status" property="status"/>
+            <result column="created" property="created"/>
+            <result column="lastLogin" property="last_login"/>
+        </association>
+        <collection property="tags" column="id" ofType="com.kanouakira.vueblog.entity.Tag" select="getTags"/>
+        <collection property="comments" column="id" ofType="commentMap" select="getComments"/>
+    </resultMap>
+
+    <select id="selectCustomPage" resultMap="postMap">
+        SELECT post.*,user.* FROM post left join user on post.author_id = user.id order by post.created desc
+    </select>
+
+    <!--    根据文章标签查询-->
+    <select id="selectCustomPageByTag" resultMap="postMap" parameterType="java.lang.String">
+        SELECT post.*,user.* FROM post left join user on post.author_id = user.id
+        where post.id in
+        (select tag_relationship.post_id from tag_relationship
+        left join tag on tag_relationship.tag_id = tag.id
+        where tag.name like concat('%',#{tag},'%'))
+        order by post.created desc
+    </select>
+
+    <!--    根据id返回文章-->
+    <select id="selectPostById" resultMap="postMap" parameterType="java.lang.Long">
+        SELECT * FROM post left join user on post.author_id = user.id where post.id = #{id}
+    </select>
+
+    <!--    根据id更新文章-->
+    <update id="updatePost" parameterType="com.kanouakira.vueblog.entity.Post">
+        update post
+        <set>
+            <if test="title != null">title=#{title},</if>
+            <if test="body != null">body = #{body},</if>
+            <if test="summary != null">summary = #{summary},</if>
+            <if test="created != null">created = #{created},</if>
+            <if test="views != null">views = #{views},</if>
+            <if test="authorId != null">author_id = #{authorId},</if>
+        </set>
+        where
+        id = #{id}
+    </update>
+
+<!--    嵌套查询文章的标签-->
+    <select id="getTags" resultType="com.kanouakira.vueblog.entity.Tag" parameterType="java.lang.Long">
+        SELECT * FROM tag_relationship left join tag on tag_relationship.tag_id = tag.id where tag_relationship.post_id = #{id}
+    </select>
+
+    <resultMap id="commentMap" type="com.kanouakira.vueblog.entity.Comment">
+        <id column="id" property="id"/>
+        <result column="userId" property="user_id"/>
+        <result column="postId" property="post_id"/>
+        <result column="status" property="status"/>
+        <result column="body" property="body"/>
+        <result column="parentCommentId" property="parent_comment_id"/>
+        <result column="replyCommentId" property="reply_comment_id"/>
+        <result column="commentLevel" property="comment_level"/>
+        <result column="created" property="created"/>
+        <result column="username" property="username"/>
+        <result column="name" property="name"/>
+        <result column="replyUsername" property="reply_username"/>
+        <result column="replyName" property="reply_name"/>
+        <collection property="childComments" column="id" ofType="commentMap" select="getChildComments"/>
+<!--        <association property="user" javaType="com.kanouakira.vueblog.entity.User">-->
+<!--            <id column="userId" property="id"/>-->
+<!--            <result column="username" property="username"/>-->
+<!--            <result column="avatar" property="avatar"/>-->
+<!--            <result column="email" property="email"/>-->
+<!--            <result column="status" property="status"/>-->
+<!--            <result column="created" property="created"/>-->
+<!--            <result column="lastLogin" property="last_login"/>-->
+<!--        </association>-->
+<!--        <association property="user" column="userId" javaType="com.kanouakira.vueblog.entity.User" select="getCommentUser"/>-->
+<!--        <association property="replyComment" column="replyCommentId" javaType="com.kanouakira.vueblog.entity.Comment" select="getReplyComment">-->
+<!--            <id column="replyCommentId" property="reply_id"/>-->
+<!--            <result column="userId" property="user_id"/>-->
+<!--            <result column="postId" property="post_id"/>-->
+<!--            <result column="status" property="status"/>-->
+<!--            <result column="body" property="body"/>-->
+<!--            <result column="parentCommentId" property="parent_comment_id"/>-->
+<!--            <result column="replyCommentId" property="reply_comment_id"/>-->
+<!--            <result column="commentLevel" property="comment_level"/>-->
+<!--            <result column="username" property="reply_username"/>-->
+<!--        </association>-->
+    </resultMap>
+
+<!--    嵌套查询文章下的评论-->
+<!--    SELECT c1.*,u1.*,c2.id as reply_id,u2.username as reply_username-->
+<!--    FROM comment c1-->
+<!--    inner join user u1 on c1.user_id = u1.id-->
+<!--    left join comment c2 on c1.reply_comment_id = c2.id-->
+<!--    left join user u2 on c2.user_id = u2.id-->
+<!--    where c1.post_id = #{id}-->
+<!--    order by c1.created desc-->
+    <select id="getComments" resultMap="commentMap" parameterType="java.lang.Long">
+        select comment.*,user.username,user.name from comment left join user on comment.user_id = user.id where comment.post_id = #{id} order by comment.created desc
+    </select>
+
+<!--    嵌套查询评论下的子评论-->
+    <!--    SELECT c1.*,user.* FROM comment left join user on comment.user_id = user.id where comment.parent_comment_id = #{id} order by comment.created desc-->
+    <select id="getChildComments" resultMap="commentMap" parameterType="java.lang.Long">
+        SELECT c1.*,u1.*,c2.id as reply_id,u2.username as reply_username,u2.name as reply_name
+        FROM comment c1
+        left join user u1 on c1.user_id = u1.id
+        left join comment c2 on c1.reply_comment_id = c2.id
+        left join user u2 on c2.user_id = u2.id
+        where c1.parent_comment_id = #{id}
+        order by c1.created desc
+    </select>
+
+<!--    嵌套查询评论下的回复评论-->
+<!--    <select id="getReplyComment" resultType="com.kanouakira.vueblog.entity.Comment" parameterType="java.lang.Long">-->
+<!--        select comment.*,user.username as reply_user_name FROM comment left join user on comment.user_id = user.id where comment.id = #{id}-->
+<!--    </select>-->
+
+</mapper>
