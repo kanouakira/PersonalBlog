@@ -58,6 +58,11 @@ public class Post implements Serializable {
      */
     private Long authorId;
 
+    /**
+     * 是否仅作者可见
+     */
+    private Boolean onlySelfVisible;
+
     private User user;
 
     private List<Tag> tags;

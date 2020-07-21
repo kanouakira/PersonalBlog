@@ -1,12 +1,12 @@
 package com.kanouakira.vueblog.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.kanouakira.vueblog.entity.Post;
 import com.kanouakira.vueblog.mapper.PostMapper;
 import com.kanouakira.vueblog.service.PostService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -32,13 +32,9 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         return this.baseMapper.selectPostById(id);
     }
 
+//    @Cacheable(key = "#page.getCurrent()+'-'+#page.getSize()+#tag", value = "customPageList")
     @Override
-    public IPage<Post> selectCustomPageByTag(IPage<Post> page, String tag) {
-        return this.baseMapper.selectCustomPageByTag(page, tag);
-    }
-
-    @Override
-    public IPage<Post> selectCustomPage(IPage<Post> page) {
-        return this.baseMapper.selectCustomPage(page);
+    public IPage<Post> selectCustomPage(IPage<Post> page, Long author_id, String tag, String manage, String search) {
+        return this.baseMapper.selectCustomPage(page, author_id, tag, manage, search);
     }
 }

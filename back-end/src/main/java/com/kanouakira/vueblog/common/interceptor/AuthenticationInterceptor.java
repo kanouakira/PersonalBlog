@@ -28,6 +28,10 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         // 从请求头中取出token
         String token = request.getHeader("token");
+        if (token != null){
+            //把userId变量放在request请求域中，仅可以被这次请求，即同一个requerst使用
+            request.setAttribute("userId", Long.valueOf(JWT.decode(token).getAudience().get(0)));
+        }
         // 如果不是映射到方法直接通过
         if(!(handler instanceof HandlerMethod)){
             return true;
@@ -68,8 +72,6 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
                 }catch (JWTVerificationException e){
                     throw new RuntimeException("Token验证不通过");
                 }
-                //把变量放在request请求域中，仅可以被这次请求，即同一个requerst使用
-                request.setAttribute("userId", Long.valueOf(userId));
                 return true;
             }
         }

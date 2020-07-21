@@ -20,6 +20,12 @@
         <span slot="title">关于我</span>
       </el-menu-item>
     </el-menu>
+    <el-card style="margin-top: 15px;" v-if="rank.length > 0" shadow="never">
+      <h3>每周热榜</h3>
+      <p v-for="(post, index) in rank" @click="redirectToDetail(post.id, post.views)">
+        {{index+1}}.{{post.title}}
+      </p>
+    </el-card>
   </div>
 </template>
 
@@ -31,7 +37,8 @@
     data() {
       return {
         sharedState: store.state,
-        categories: []
+        categories: [],
+        rank: []
       }
     },
     directives:{
@@ -52,6 +59,7 @@
             break;
         }
       },
+      // 获取标签tag
       getCategories(){
         const path=`/categories`
         this.$axios.get(path)
@@ -78,10 +86,36 @@
           .catch(error => {
             console.error(error)
           })
+      },
+      // 获取每周阅读量排行
+      getWeekRank(){
+        const path = `/posts/rank`
+        this.$axios.get(path)
+          .then(res => {
+            this.rank = res.data.data
+          })
+          .catch(error => {
+            console.error(error)
+          })
+      },
+      addPostViews(post_id, views) {
+        const path = `/posts/${post_id}/addViews`
+        this.$axios.put(path)
+          .then((res) => {
+            // console.log(res)
+          })
+          .catch((error) => {
+            console.error(error);
+          })
+      },
+      redirectToDetail(id, views){
+        this.addPostViews(id, views)
+        this.$router.push({path:`/post/${id}`})
       }
     },
     created() {
       this.getCategories()
+      this.getWeekRank()
     }
   }
 </script>

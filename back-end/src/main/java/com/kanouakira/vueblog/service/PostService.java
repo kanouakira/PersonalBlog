@@ -21,15 +21,11 @@ public interface PostService extends IService<Post> {
      * @param page
      * @return
      */
-    IPage<Post> selectCustomPage(IPage<Post> page);
-
-    /**
-     * 自定义sql分页根据标签查询文章
-     * @param page
-     * @param tag
-     * @return
-     */
-    IPage<Post> selectCustomPageByTag(IPage<Post> page, String tag);
+    IPage<Post> selectCustomPage(IPage<Post> page,
+                                 @Param("id") Long author_id,
+                                 @Param("tag") String tag,
+                                 @Param("manage")String manage,
+                                 @Param("search")String search);
 
     /**
      * 根据id返回一篇文章

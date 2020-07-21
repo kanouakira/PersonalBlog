@@ -20,7 +20,7 @@ public class UploadPictureServiceImpl implements UploadPictureService {
 
     @Override
     public String uploadPicture(MultipartFile file) throws IOException {
-        String qiniuUrl = "qc2q0lv21.bkt.clouddn.com";
+        String qiniuUrl = "cdn.kanouakira.cn";
         Configuration configuration = new Configuration(Region.region2());
         UploadManager uploadManager = new UploadManager(configuration);
         String accessKey = "clKLmeU_yLlztFrj4gCqiwuMPcfwZV-yxOVybgeo";

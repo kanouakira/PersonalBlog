@@ -31,7 +31,7 @@
           <p>
             <el-link :underline="false">{{$moment(comment.created).fromNow()}}</el-link>
             <el-button size="mini" class="comment-reply-link" v-on:click="changeCommentForm(comment)" style="float: right; margin-right: 10px;"><i class="el-icon-edit-outline"></i>评论</el-button>
-            <el-button size="mini" @click="editComment(comment)" style="float: right; margin-right: 5px;" v-if="sharedState.user.id == comment.userId"><i class="el-icon-edit-outline"></i>编辑</el-button>
+            <el-button size="mini" @click="editComment(comment)" style="float: right; margin-right: 5px;" v-if="sharedState.user && sharedState.user.id == comment.userId"><i class="el-icon-edit-outline"></i>编辑</el-button>
           </p>
 
           <div v-for="(childComment, index) in comment.childComments" v-if="childComment.status == 0" :key="index" class="comment-item childComment" style="border: lightgray 1px solid; padding-left: 10px;">
@@ -43,7 +43,7 @@
             <p>
               <el-link :underline="false">{{$moment(childComment.created).fromNow()}}</el-link>
               <el-button size="mini" class="comment-reply-link" v-on:click="changeCommentForm(childComment)" style="float: right; margin-right: 5px;"><i class="el-icon-s-comment"></i>评论</el-button>
-              <el-button size="mini" @click="editComment(childComment)" style="float: right; margin-right: 5px;" v-if="sharedState.user.id == childComment.userId"><i class="el-icon-edit-outline"></i>编辑</el-button>
+              <el-button size="mini" @click="editComment(childComment)" style="float: right; margin-right: 5px;" v-if="sharedState.user && sharedState.user.id == childComment.userId"><i class="el-icon-edit-outline"></i>编辑</el-button>
             </p>
           </div>
         </div>
@@ -116,6 +116,7 @@ export default {
         parent_comment_id: null,
       },
       editCommentForm:{
+        id: '',
         body:'',
       },
       rules: {
@@ -167,7 +168,7 @@ export default {
       const path = `/posts/${this.$route.params.id}`
       this.$axios.get(path)
         .then((res) => {
-          // console.log(res.data)
+          console.log(res.data.data)
           this.msg = res.data.data
           // this.$moment.format()
         })
@@ -241,7 +242,6 @@ export default {
           query: { redirect: this.$route.path}
         })
       }
-
       this.commentForm.commentLevel = 2
       this.commentForm.reply_comment_id = comment.id
       this.commentForm.parent_comment_id = comment.parentCommentId ? comment.parentCommentId : comment.id
@@ -306,6 +306,11 @@ export default {
         $('#commentFormBody').focus()
       })
     })
+  },
+  // 当路由变化后(比如变更查询参数 page 和 per_page)重新加载数据
+  beforeRouteUpdate (to, from, next) {
+    next()
+    this.getPost()
   }
 }
 </script>

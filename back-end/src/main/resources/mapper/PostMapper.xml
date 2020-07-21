@@ -8,9 +8,10 @@
         <result column="body" property="body"/>
         <result column="created" property="created"/>
         <result column="views" property="views"/>
-        <result column="authorId" property="author_id"/>
+        <result column="author_id" property="authorId"/>
+        <result column="only_self_visible" property="onlySelfVisible"/>
         <association property="user" javaType="com.kanouakira.vueblog.entity.User">
-            <id column="authorId" property="id"/>
+            <id column="author_id" property="id"/>
             <result column="username" property="username"/>
             <result column="name" property="name"/>
             <result column="avatar" property="avatar"/>
@@ -23,17 +24,19 @@
         <collection property="comments" column="id" ofType="commentMap" select="getComments"/>
     </resultMap>
 
-    <select id="selectCustomPage" resultMap="postMap">
-        SELECT post.*,user.* FROM post left join user on post.author_id = user.id order by post.created desc
-    </select>
-
     <!--    根据文章标签查询-->
-    <select id="selectCustomPageByTag" resultMap="postMap" parameterType="java.lang.String">
+    <select id="selectCustomPage" resultMap="postMap" parameterType="java.lang.Long">
         SELECT post.*,user.* FROM post left join user on post.author_id = user.id
+        <if test="manage == ''">
         where post.id in
-        (select tag_relationship.post_id from tag_relationship
+        (select post.id from tag_relationship
         left join tag on tag_relationship.tag_id = tag.id
-        where tag.name like concat('%',#{tag},'%'))
+        left join post on tag_relationship.post_id = post.id
+        where (post.only_self_visible = '0' <if test="id != null">or post.author_id = #{id} </if>) and tag.name like concat('%',#{tag},'%')
+        union
+        select id from post where id not in (select post_id from tag_relationship ) and (only_self_visible = '0' <if test="id != null">or author_id = #{id}</if>))
+        <if test="search != ''">and post.title like concat('%',#{search},'%')</if>
+        </if>
         order by post.created desc
     </select>
 
@@ -51,6 +54,7 @@
             <if test="summary != null">summary = #{summary},</if>
             <if test="created != null">created = #{created},</if>
             <if test="views != null">views = #{views},</if>
+            <if test="onlySelfVisible != null">only_self_visible = #{onlySelfVisible},</if>
             <if test="authorId != null">author_id = #{authorId},</if>
         </set>
         where
@@ -64,19 +68,30 @@
 
     <resultMap id="commentMap" type="com.kanouakira.vueblog.entity.Comment">
         <id column="id" property="id"/>
-        <result column="userId" property="user_id"/>
-        <result column="postId" property="post_id"/>
+        <result column="user_id" property="userId"/>
+        <result column="post_id" property="postId"/>
         <result column="status" property="status"/>
         <result column="body" property="body"/>
-        <result column="parentCommentId" property="parent_comment_id"/>
-        <result column="replyCommentId" property="reply_comment_id"/>
-        <result column="commentLevel" property="comment_level"/>
+        <result column="parent_comment_id" property="parentCommentId"/>
+        <result column="reply_comment_id" property="replyCommentId"/>
+        <result column="comment_level" property="commentLevel"/>
         <result column="created" property="created"/>
         <result column="username" property="username"/>
         <result column="name" property="name"/>
-        <result column="replyUsername" property="reply_username"/>
-        <result column="replyName" property="reply_name"/>
+        <result column="reply_username" property="replyUsername"/>
+        <result column="reply_name" property="replyName"/>
         <collection property="childComments" column="id" ofType="commentMap" select="getChildComments"/>
+<!--        <association property="replyComment" column="reply_id" javaType="com.kanouakira.vueblog.entity.Comment" select="getReplyComment">-->
+<!--            <id column="reply_id" property="replyCommentId"/>-->
+<!--            <result column="userId" property="user_id"/>-->
+<!--            <result column="postId" property="post_id"/>-->
+<!--            <result column="status" property="status"/>-->
+<!--            <result column="body" property="body"/>-->
+<!--            <result column="parent_comment_id" property="parentCommentId"/>-->
+<!--            <result column="reply_comment_id" property="replyCommentId"/>-->
+<!--            <result column="comment_level" property="commentLevel"/>-->
+<!--            <result column="reply_username" property="username"/>-->
+<!--        </association>-->
 <!--        <association property="user" javaType="com.kanouakira.vueblog.entity.User">-->
 <!--            <id column="userId" property="id"/>-->
 <!--            <result column="username" property="username"/>-->
@@ -87,17 +102,6 @@
 <!--            <result column="lastLogin" property="last_login"/>-->
 <!--        </association>-->
 <!--        <association property="user" column="userId" javaType="com.kanouakira.vueblog.entity.User" select="getCommentUser"/>-->
-<!--        <association property="replyComment" column="replyCommentId" javaType="com.kanouakira.vueblog.entity.Comment" select="getReplyComment">-->
-<!--            <id column="replyCommentId" property="reply_id"/>-->
-<!--            <result column="userId" property="user_id"/>-->
-<!--            <result column="postId" property="post_id"/>-->
-<!--            <result column="status" property="status"/>-->
-<!--            <result column="body" property="body"/>-->
-<!--            <result column="parentCommentId" property="parent_comment_id"/>-->
-<!--            <result column="replyCommentId" property="reply_comment_id"/>-->
-<!--            <result column="commentLevel" property="comment_level"/>-->
-<!--            <result column="username" property="reply_username"/>-->
-<!--        </association>-->
     </resultMap>
 
 <!--    嵌套查询文章下的评论-->
@@ -108,8 +112,15 @@
 <!--    left join user u2 on c2.user_id = u2.id-->
 <!--    where c1.post_id = #{id}-->
 <!--    order by c1.created desc-->
+<!--    select comment.*,user.username,user.name from comment left join user on comment.user_id = user.id where comment.post_id = #{id} order by comment.created desc-->
     <select id="getComments" resultMap="commentMap" parameterType="java.lang.Long">
-        select comment.*,user.username,user.name from comment left join user on comment.user_id = user.id where comment.post_id = #{id} order by comment.created desc
+        SELECT c1.*,u1.*,c2.id as reply_id,u2.username as reply_username,u2.name as reply_name
+        FROM comment c1
+        inner join user u1 on c1.user_id = u1.id
+        left join comment c2 on c1.reply_comment_id = c2.id
+        left join user u2 on c2.user_id = u2.id
+        where c1.post_id = #{id}
+        order by c1.created desc
     </select>
 
 <!--    嵌套查询评论下的子评论-->

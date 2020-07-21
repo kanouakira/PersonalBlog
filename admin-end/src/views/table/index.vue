@@ -35,6 +35,13 @@
           </el-tag>
         </template>
       </el-table-column>
+
+      <el-table-column label="仅作者可见" width="110" align="center">
+        <template slot-scope="scope">
+          <span>{{ scope.row.onlySelfVisible ? "是" : "否" }}</span>
+        </template>
+      </el-table-column>
+
       <el-table-column align="center" label="创建时间" width="200">
         <template slot-scope="scope">
           <i class="el-icon-time" />
@@ -75,6 +82,9 @@
         <el-form ref="readPost" :model="readPost" label-width="120px">
           <el-form-item label="文章标题">
             <el-input v-model="readPost.title" />
+          </el-form-item>
+          <el-form-item label="私密">
+            <el-switch on-text="" off-text="" v-model="readPost.onlySelfVisible"></el-switch>
           </el-form-item>
           <el-form-item label="文章标签">
             <el-select v-model="selected_tags" multiple placeholder="请选择文章分类标签" style="width: 100%;">
@@ -139,7 +149,8 @@ export default {
         title: '',
         summary: '',
         tags: '',
-        body: ''
+        body: '',
+        onlySelfVisible: null
       },
       tags: [],
       selected_tags: []
@@ -157,7 +168,8 @@ export default {
       this.listLoading = true
       const payload = {
         page: this.currentPage,
-        per_page: this.pageSize
+        per_page: this.pageSize,
+        manage: "true"
       }
       getPosts(payload).then(response => {
         this.total = response.data.total
@@ -205,7 +217,8 @@ export default {
       const data = {
         title: this.readPost.title,
         summary: this.readPost.summary,
-        body: this.readPost.body
+        body: this.readPost.body,
+        onlySelfVisible: this.readPost.onlySelfVisible
       }
       updatePost(this.readPost.id, data).then(response => {
         updateTagToPost(this.readPost.id, this.selected_tags).then(response => {

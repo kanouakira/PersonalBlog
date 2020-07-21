@@ -3,10 +3,15 @@
     <div v-for="(post, index) in posts" style="margin-bottom: 10px;">
       <el-card class="box-card" shadow="hover" @click.native="redirectToDetail(post.id, post.views)">
         <div slot="header" class="clearfix">
+          <div>
+            <el-tag type="danger" size="small" v-if="post.onlySelfVisible">
+              私密
+            </el-tag>
+            <el-tag v-for="(tag, index) in post.tags" :key="index" type="success" style="margin:0 2px;" size="small">
+              {{tag.name}}
+            </el-tag>
+          </div>
           <span style="font-size: 20px;">{{post.title}}</span>
-          <el-tag v-for="(tag, index) in post.tags" :key="index" type="success" style="margin:0 2px;" size="small">
-            {{tag.name}}
-          </el-tag>
           <span style="float: right; color: lightblue">
             <i class="el-icon-view"></i> {{post.views}}
             <i class="el-icon-s-comment"></i> {{post.comments.length}}
@@ -19,6 +24,7 @@
           </p>
         </div>
       </el-card>
+
     </div>
     <el-pagination
       @size-change="handleSizeChange"
@@ -44,6 +50,11 @@
         total:100,
       };
     },
+    watch: {
+      searchInfo(val) {
+        this.getPosts()
+      }
+    },
     methods:{
       // 加载文章
       getPosts () {
@@ -59,12 +70,14 @@
         if (typeof this.$route.query.tag != 'undefined') {
           tag = this.$route.query.tag
         }
+        // &search=${this.searchInfo}
         const path = `/posts/?page=${page}&per_page=${per_page}&tag=${tag}`
         this.$axios.get(path)
           .then((res) => {
             this.total = res.data.data.total
             this.pageSize = res.data.data.per_page
             this.posts = res.data.data.data;
+            console.log(this.posts)
           })
           .catch((error) => {
             console.error(error);
@@ -136,4 +149,5 @@
   .clearfix:after {
       clear: both
   }
+
 </style>

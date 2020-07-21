@@ -84,6 +84,8 @@ public class Comment implements Serializable {
      */
     private String replyUsername;
 
+    private Comment replyComment;
+
     /**
      * 回复的评论发表者昵称
      */

@@ -1,7 +1,7 @@
 <template>
   <el-card>
-    <el-row :gutter="50">
-      <el-col :span="10" style="text-align: right;">
+    <el-row>
+      <el-col :sm="10" style="text-align: center;">
         <el-row>
           <el-col :span="24">
             <el-avatar class="avatar" @error="errorHandler" shape="square" :size="180" :src="user.avatar"/>
@@ -11,7 +11,7 @@
           </el-col>
         </el-row>
       </el-col>
-      <el-col :span="14" class="primary_text">
+      <el-col :sm="14" class="primary_text">
         <p>用户名:<span class="small_text">{{user.username}}</span></p>
         <p>昵称:<span class="small_text" v-text="user.name ? user.name : '未设定昵称'"/></p>
         <p>邮箱:<span class="small_text" v-text="user.email ? user.email : '未绑定邮箱'"/></p>

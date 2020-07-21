@@ -3,8 +3,8 @@
     <el-row>
       <el-page-header @back="goBack" content="编辑信息" style="margin: 20px 0; font-weight: 800;">
       </el-page-header>
-      <el-col :span="10">
-       <!-- 部署服务器后需要修改 -->
+      <el-col :sm="10" style="text-align: center; margin: 5px 0;">
+       <!-- 部署服务器后需要修改 http://49.234.221.187:5000/vueblog/api/upload/picture-->
        <el-upload
           class="avatar-uploader"
           action="http://49.234.221.187:5000/vueblog/api/upload/picture"
@@ -22,7 +22,7 @@
           inactive-text="">
         </el-switch>
       </el-col>
-      <el-col :span="14">
+      <el-col :sm="14" style="text-align: center; margin: 5px 0;">
         <el-form ref="userForm" :model="userForm" :rules="rules" label-width="100px">
           <el-form-item label="昵称" prop="name">
             <el-input v-model="userForm.name"></el-input>

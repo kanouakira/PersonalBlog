@@ -4,6 +4,9 @@
       <el-form-item label="文章标题">
         <el-input v-model="form.title" />
       </el-form-item>
+      <el-form-item label="私密">
+        <el-switch on-text="" off-text="" v-model="form.onlySelfVisible"></el-switch>
+      </el-form-item>
       <el-form-item label="文章标签">
         <el-select v-model="form.tags" multiple placeholder="请选择文章分类标签" style="width: 100%;">
           <el-option v-for="(tag, index) in tags" :key="index" :label="tag.label" :value="tag.value" />
@@ -34,7 +37,8 @@ export default {
         title: '',
         tags: '',
         summary: '',
-        body: ''
+        body: '',
+        onlySelfVisible: false
       },
       tags:[]
     }
@@ -58,6 +62,7 @@ export default {
       var data = {
         title: this.form.title,
         summary: this.form.summary,
+        onlySelfVisible: this.form.onlySelfVisible,
         body: this.form.body
       }
       createPost(data).then(response => {
