@@ -1,0 +1,8 @@
+# 后端SpringBoot
+SpringBoot集成mybatis-plus加快开发效率
+
+通过Spring Data Redis整合redis使用ZSet数据类型根据浏览量创建排行榜
+
+JWT生成token通过自定义注解表示哪些api需要登录后请求头中附带token才能访问
+
+API 满足RESTful风格
